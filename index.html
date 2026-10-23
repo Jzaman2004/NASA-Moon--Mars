@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Miners | NASA Abandoned Hardware</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Three.js, OrbitControls, and GSAP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+</head>
+<body>
+
+    <!-- Top Navigation Bar -->
+    <nav class="navbar navbar-expand-lg fixed-top glass-nav">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand brand-title d-flex align-items-center" href="#" id="navHomeBtn">
+                <span class="nasa-badge">NASA</span>
+                <span>ABANDONED HARDWARE</span>
+                <span class="team-nav-pill ms-3 d-none d-md-inline-block">⛏️ TEAM: SPACE MINERS</span>
+            </a>
+            <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-sci-fi btn-sm d-none" id="backToSpaceBtn">
+                    &#8592; Return to Deep Space
+                </button>
+                <button class="btn btn-sci-fi btn-sm d-none" id="backToPlanetBtn">
+                    &#8592; Back to Orbit
+                </button>
+                <a href="https://github.com/Jzaman2004/NASA-Moon--Mars" target="_blank" class="btn btn-outline-info btn-sm ms-2">
+                    GitHub Repo
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- TOP HEADER OVERLAY (Sits cleanly above the 3D spheres) -->
+    <div id="heroHeader" class="hero-header text-center">
+        <p class="subtitle-tag">2026 NASA SPACE APPS CHALLENGE</p>
+        <h1 class="main-title">ABANDONED BUT NOT FORGOTTEN</h1>
+        <p class="hero-desc">
+            Click a celestial sphere or use the launch controls below to inspect the historic rovers, landers, and instruments left behind on the Moon and Mars.
+        </p>
+    </div>
+
+    <!-- BOTTOM ACTION BAR (Buttons sit BELOW the 2 spheres!) -->
+    <div id="heroBottomBar" class="hero-bottom-bar text-center">
+        <div class="planet-quick-select">
+            <button class="btn btn-planet-select moon-btn" onclick="focusPlanet('moon')">
+                🌕 Explore The Moon (4 Sites)
+            </button>
+            <button class="btn btn-planet-select mars-btn" onclick="focusPlanet('mars')">
+                🔴 Explore Mars (4 Sites)
+            </button>
+        </div>
+    </div>
+
+    <!-- TEAM SPACE MINERS BADGE (Bottom Right) -->
+    <div id="teamBadge" class="team-floating-card">
+        <div class="team-header">⛏️ TEAM SPACE MINERS</div>
+        <div class="team-members">
+            <span>👨‍🚀 Jawad Zaman</span>
+            <span class="divider">•</span>
+            <span>👩‍🚀 Sofia Calidayan</span>
+        </div>
+    </div>
+
+    <!-- Planet Orbit HUD (Visible when zoomed into Moon or Mars) -->
+    <div id="planetHud" class="planet-hud d-none">
+        <div class="hud-header">
+            <span class="hud-status">ORBITAL TELEMETRY LOCKED</span>
+            <h2 id="hudPlanetName">THE MOON</h2>
+            <p id="hudPlanetDesc">Rotate the globe and click any of the 4 glowing surface beacons (or select below) to zoom into the hardware site.</p>
+        </div>
+        <div class="marker-quick-list" id="markerQuickList"></div>
+    </div>
+
+    <!-- Floating Hover Tooltip -->
+    <div id="tooltip" class="custom-tooltip"></div>
+
+    <!-- Equipment Zoom-Morph Preview Modal -->
+    <div id="equipmentView" class="equipment-view d-none">
+        <div class="equipment-card glass-panel">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <span id="eqBadge" class="badge bg-info text-dark mb-2">LUNAR ARTIFACT</span>
+                    <h2 id="eqTitle" class="eq-title">Artifact Title</h2>
+                </div>
+                <button class="btn btn-close-sci" id="closeEqBtn">&times; BACK TO ORBIT</button>
+            </div>
+
+            <div class="row g-3 mb-4 telemetry-grid">
+                <div class="col-6 col-md-3">
+                    <div class="telemetry-box">
+                        <small>COORDINATES</small>
+                        <span id="eqCoords">---</span>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="telemetry-box">
+                        <small>MISSION YEAR</small>
+                        <span id="eqYear">---</span>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="telemetry-box">
+                        <small>MASS LEFT BEHIND</small>
+                        <span id="eqMass">---</span>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="telemetry-box">
+                        <small>CURRENT STATUS</small>
+                        <span id="eqStatus" class="text-warning">---</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="eq-story-body">
+                <h5>📖 The Story & Science</h5>
+                <p id="eqStory"></p>
+                <div class="fun-fact-box mt-3">
+                    <strong>💡 Space Explorer Fun Fact:</strong>
+                    <span id="eqFact"></span>
+                </div>
+            </div>
+
+            <div class="mt-4 pt-3 border-top border-secondary d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <small class="text-info">✨ Includes Interactive 3D Hardware Hologram & Quiz</small>
+                <button class="btn btn-sci-fi btn-lg" id="openFullPageBtn">
+                    Launch Full 3D Equipment Page &#8594;
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3D WebGL Container -->
+    <div id="container"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>

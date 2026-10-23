@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hardware Telemetry | Team Space Miners</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <style>
+        body {
+            background: radial-gradient(circle at top right, #0a1936 0%, #02040a 70%);
+            color: #e6f1ff;
+            font-family: 'Rajdhani', sans-serif;
+            min-height: 100vh;
+            padding-top: 80px;
+            padding-bottom: 50px;
+        }
+        .glass-nav {
+            background: rgba(5, 12, 28, 0.85) !important;
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(0, 212, 255, 0.3);
+        }
+        .orbitron { font-family: 'Orbitron', sans-serif; }
+        .holo-card {
+            background: rgba(8, 18, 40, 0.82);
+            border: 1px solid rgba(0, 212, 255, 0.35);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 0 35px rgba(0, 212, 255, 0.12);
+        }
+        #holoCanvasContainer {
+            width: 100%;
+            height: 380px;
+            background: radial-gradient(circle, rgba(0, 212, 255, 0.12) 0%, rgba(2, 6, 18, 0.95) 85%);
+            border: 1px solid rgba(0, 255, 204, 0.4);
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+            cursor: grab;
+        }
+        .holo-label {
+            position: absolute;
+            top: 12px;
+            left: 14px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.72rem;
+            color: #00ffcc;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 4px 10px;
+            border-radius: 4px;
+            border: 1px solid rgba(0, 255, 204, 0.4);
+            pointer-events: none;
+        }
+        .stat-pill {
+            background: rgba(255, 255, 255, 0.04);
+            border-left: 3px solid #00d4ff;
+            padding: 10px 14px;
+            border-radius: 6px;
+        }
+        .stat-pill small { color: #00d4ff; font-size: 0.72rem; letter-spacing: 1px; display: block; }
+        .stat-pill strong { font-family: 'Orbitron', sans-serif; font-size: 0.95rem; }
+        .quiz-btn {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(0, 212, 255, 0.35);
+            color: #fff;
+            text-align: left;
+            padding: 10px 16px;
+            border-radius: 8px;
+            width: 100%;
+            margin-bottom: 8px;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+        .quiz-btn:hover { background: rgba(0, 212, 255, 0.2); }
+        .quiz-btn.correct { background: rgba(0, 255, 136, 0.25); border-color: #00ff88; }
+        .quiz-btn.wrong { background: rgba(255, 70, 70, 0.25); border-color: #ff4646; }
+        .nav-artifact-pill {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.78rem;
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            color: #b8cde8;
+            text-decoration: none;
+            transition: 0.2s;
+        }
+        .nav-artifact-pill:hover, .nav-artifact-pill.active {
+            background: #00d4ff;
+            color: #02040a;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg fixed-top glass-nav">
+        <div class="container">
+            <a class="navbar-brand orbitron text-white fw-bold" href="index.html">
+                <span class="badge bg-primary me-2">NASA</span> SPACE MINERS ARCHIVE
+            </a>
+            <div class="d-flex gap-2">
+                <a id="backToOrbitLink" href="index.html" class="btn btn-outline-info btn-sm orbitron">
+                    &#8592; Return to Planet Orbit
+                </a>
+                <a href="index.html" class="btn btn-outline-light btn-sm orbitron">
+                    🏠 Home
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Quick Switcher for all 8 Artifacts -->
+        <div class="d-flex flex-wrap gap-2 mb-4 pb-2 border-bottom border-secondary" id="artifactSwitcher"></div>
+
+        <div class="row g-4">
+            <!-- Left Column: Interactive 3D Hardware Hologram + Telemetry -->
+            <div class="col-lg-5">
+                <div class="holo-card">
+                    <div id="holoCanvasContainer">
+                        <div class="holo-label">🔄 DRAG TO ROTATE 3D HARDWARE MODEL</div>
+                    </div>
+
+                    <div class="row g-2 mt-3">
+                        <div class="col-6">
+                            <div class="stat-pill">
+                                <small>LANDING SITE</small>
+                                <strong id="pSite">---</strong>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="stat-pill">
+                                <small>COORDINATES</small>
+                                <strong id="pCoords">---</strong>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="stat-pill">
+                                <small>LAUNCH / ARRIVAL</small>
+                                <strong id="pYear">---</strong>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="stat-pill">
+                                <small>MASS LEFT BEHIND</small>
+                                <strong id="pMass">---</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-3 p-3 rounded" style="background: rgba(0,255,204,0.07); border: 1px solid rgba(0,255,204,0.3);">
+                        <div class="orbitron text-info small fw-bold">⛏️ ARCHIVED BY TEAM SPACE MINERS</div>
+                        <div class="small text-light mt-1">Researchers: <strong>Jawad Zaman</strong> &amp; <strong>Sofia Calidayan</strong></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Full Storytelling, Science & Interactive Quiz -->
+            <div class="col-lg-7">
+                <div class="holo-card h-100">
+                    <span id="pPlanetBadge" class="badge bg-info text-dark mb-2 orbitron">LUNAR HARDWARE</span>
+                    <h1 id="pTitle" class="orbitron fw-bold mb-3">Loading Artifact...</h1>
+
+                    <h5 class="orbitron text-info mt-3">🚀 Mission Story: Why Was It Left Behind?</h5>
+                    <p id="pStory" class="fs-5 text-light"></p>
+
+                    <h5 class="orbitron text-info mt-4">🔬 The Science It Made Possible</h5>
+                    <p id="pScience" class="fs-5 text-light"></p>
+
+                    <h5 class="orbitron text-info mt-4">🛠️ What Is Its Condition Today?</h5>
+                    <p id="pCondition" class="fs-5 text-light"></p>
+
+                    <!-- Interactive School-Age Quiz -->
+                    <div class="mt-4 pt-3 border-top border-secondary">
+                        <h5 class="orbitron text-warning mb-2">🧠 Space Explorer Challenge Quiz</h5>
+                        <p id="qQuestion" class="fw-bold mb-3"></p>
+                        <div id="qOptions"></div>
+                        <div id="qFeedback" class="mt-2 fw-bold"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const catalog = {
+            'apollo-11': {
+                planet: 'moon',
+                title: 'Apollo 11 Lunar Module Descent Stage ("Eagle")',
+                site: 'Sea of Tranquility',
+                coords: '0.6741° N, 23.4730° E',
+                year: 'July 20, 1969',
+                mass: '2,132 kg',
+                modelType: 'lander',
+                story: 'To land humans safely on the Moon and bring them home, the Apollo Lunar Module was built in two separate halves. The gold-wrapped octagonal Descent Stage contained the landing radar, four shock-absorbing legs, and the rocket engine that gently lowered Neil Armstrong and Buzz Aldrin onto the Sea of Tranquility. When it was time to go home, the Descent Stage acted as a launchpad—the astronauts fired explosive bolts and blasted off in the upper Ascent Stage, leaving the lower half behind forever.',
+                science: 'Alongside the Descent Stage, the astronauts deployed the Early Apollo Scientific Experiments Package (EASEP). This included a Passive Seismic Experiment that detected moonquakes and the Lunar Laser Ranging Retroreflector—a suitcase-sized panel of 100 fused-silica corner-cube mirrors.',
+                condition: 'While the Descent Stage’s batteries and electronics have been cold and dead since 1969, the Laser Retroreflector requires zero electricity and STILL WORKS today! Astronomers on Earth bounce laser pulses off it to measure the Moon’s distance to within millimeters, proving the Moon is drifting away from Earth at 3.8 cm per year.',
+                quiz: {
+                    q: 'Which piece of Apollo 11 equipment left at Tranquility Base still works today without any battery power?',
+                    options: [
+                        'The Lunar Laser Ranging Retroreflector (mirror array)',
+                        'The Lunar Roving Vehicle electric motor',
+                        'The gold Mylar thermal blanket heater'
+                    ],
+                    answer: 0
+                }
+            },
+            'apollo-15-lrv': {
+                planet: 'moon',
+                title: 'Apollo 15 Lunar Roving Vehicle ("Moon Buggy")',
+                site: 'Hadley–Apennine',
+                coords: '26.1322° N, 3.6339° E',
+                year: 'July 31, 1971',
+                mass: '210 kg (34 kg in Lunar Gravity)',
+                modelType: 'rover',
+                story: 'On early Apollo missions, astronauts could only walk a few hundred meters from their lander in their bulky spacesuits. For Apollo 15, NASA engineers packed a foldable electric car—the Lunar Roving Vehicle—into a wedge-shaped bay on the side of the lander! Astronauts David Scott and James Irwin drove it 27.9 kilometers across craters, rilles, and mountain slopes, collecting 77 kg of lunar rocks before parking it for the last time.',
+                science: 'Because of the Moon Buggy’s range, Scott and Irwin reached the base of Mons Hadley Delta and discovered the famous "Genesis Rock" (Sample 15415)—a pristine chunk of anorthosite over 4 billion years old that helped scientists unlock how the Moon’s original crust formed from a magma ocean.',
+                condition: 'Parked on a flat plain east of the lander, its silver-zinc batteries are long depleted and its white paint has been tanned by 55 years of unfiltered solar UV radiation. Its woven zinc-coated piano-wire tires remain completely intact in the airless vacuum.',
+                quiz: {
+                    q: 'Why were the Apollo 15 Moon Buggy’s tires made of woven piano-wire mesh instead of air-filled rubber?',
+                    options: [
+                        'To make music while driving across craters',
+                        'Rubber tires filled with air would explode or degrade in the harsh vacuum and extreme temperatures of the Moon',
+                        'Piano wire made the rover float above the dust'
+                    ],
+                    answer: 1
+                }
+            },
+            'surveyor-3': {
+                planet: 'moon',
+                title: 'Surveyor 3 Robotic Lander',
+                site: 'Ocean of Storms',
+                coords: '3.0158° S, 23.4183° W',
+                year: 'April 20, 1967',
+                mass: '296 kg',
+                modelType: 'tripod',
+                story: 'Before sending humans to the Moon, scientists worried that the Moon might be covered in a deep ocean of powdery dust that would swallow a heavy spacecraft. Surveyor 3 flew to the Moon in 1967 to test the ground first. Its radar glitched during landing, causing its engines to stay on and making the robot bounce twice like a pogo stick before settling inside a crater!',
+                science: 'Equipped with a mechanical claw on an extendable pantograph arm, Surveyor 3 dug trenches up to 18 cm deep and snapped over 6,300 TV pictures, proving the lunar regolith was firm like damp beach sand. Two and a half years later, Apollo 12 astronauts Pete Conrad and Alan Bean landed just 163 meters away and walked over to inspect it!',
+                condition: 'Surveyor 3 sits inside its crater missing its television camera and soil scoop—because the Apollo 12 astronauts snipped them off with heavy-duty cutters and brought them back to Earth (where the camera is now on display at the Smithsonian Air and Space Museum!).',
+                quiz: {
+                    q: 'What makes Surveyor 3 unique among all robotic spacecraft ever launched into space?',
+                    options: [
+                        'It is the only robotic probe on another world ever visited in person by human astronauts',
+                        'It drove all the way from the Moon’s south pole to the equator',
+                        'It still broadcasts radio music every full moon'
+                    ],
+                    answer: 0
+                }
+            },
+            'ranger-4': {
+                planet: 'moon',
+                title: 'Ranger 4 Lunar Impact Probe',
+                site: 'Lunar Far Side',
+                coords: '15.5° S, 130.7° W',
+                year: 'April 26, 1962',
+                mass: '331 kg',
+                modelType: 'probe',
+                story: 'At the dawn of the Space Race in 1962, NASA’s Ranger program aimed to fly straight toward the Moon, snapping rapid-fire television photos in the final 10 minutes before crashing, while ejecting a tough balsa-wood sphere carrying a seismometer. Shortly after launch, a timer in Ranger 4’s central computer froze, preventing its solar panels from unfolding and silencing its camera.',
+                science: 'Even though its main computer failed, a tiny 50-milliwatt battery-powered radio transponder inside its balsa-wood capsule kept beeping! NASA’s Deep Space Network tracked that faint signal all the way to the Moon, making Ranger 4 the very first U.S. spacecraft to reach another celestial body.',
+                condition: 'Without braking rockets, Ranger 4 slammed into the mysterious far side of the Moon at 9,600 km/h (5,965 mph), scattering gold-and-chrome aluminum fragments across a cratered plain out of sight of Earth.',
+                quiz: {
+                    q: 'How did NASA engineers plan to cushion Ranger 4’s seismometer capsule during a hard landing on the Moon?',
+                    options: [
+                        'By encasing it inside a thick sphere of lightweight balsa wood',
+                        'By using giant nylon parachutes in the lunar air',
+                        'By landing it in a liquid water lake'
+                    ],
+                    answer: 0
+                }
+            },
+            'ingenuity': {
+                planet: 'mars',
+                title: 'Ingenuity Mars Helicopter ("Ginny")',
+                site: 'Jezero Crater ("Valinor Hills")',
+                coords: '18.4447° N, 77.4508° E',
+                year: 'Feb 2021 – Jan 2024',
+                mass: '1.8 kg',
+                modelType: 'helicopter',
+                story: 'Flying a helicopter on Mars is aerospace engineering on hard mode: Mars’s atmosphere has only 1% the density of Earth’s air, meaning rotor blades have almost nothing to push against! Strapped to the belly of the Perseverance rover, tissue-box-sized Ingenuity spun two 1.2-meter carbon-fiber counter-rotating blades at 2,537 RPM. Planned for just 5 flights, it completed an incredible 72 flights before a steep sand ripple damaged its rotor tips on January 18, 2024.',
+                science: 'Ingenuity proved aerial scouting works on other worlds! It flew ahead of the Perseverance rover to photograph rocky outcrops, ancient river delta channels, and sand traps from the sky, saving the rover weeks of risky driving.',
+                condition: 'Even though its rotor blades can no longer spin for flight, Ingenuity is STILL ALIVE! Before Perseverance drove out of radio range, NASA engineers updated Ingenuity’s software so it wakes up daily, charges its batteries with its top solar panel, snaps color photos of the sand dunes, and records temperature data for the next 20 years.',
+                quiz: {
+                    q: 'Why did Ingenuity’s rotor blades have to spin at over 2,500 RPM—about 5 times faster than a helicopter on Earth?',
+                    options: [
+                        'Because Mars has 10 times stronger gravity than Earth',
+                        'Because Mars’s atmosphere is ultra-thin (only ~1% as dense as Earth’s air)',
+                        'To blow red dust off the Perseverance rover'
+                    ],
+                    answer: 1
+                }
+            },
+            'opportunity': {
+                planet: 'mars',
+                title: 'Opportunity Mars Exploration Rover (MER-B)',
+                site: 'Perseverance Valley, Endeavour Crater',
+                coords: '2.046° S, 5.528° W',
+                year: '2004 – 2018',
+                mass: '185 kg',
+                modelType: 'rover',
+                story: 'Opportunity landed inside Eagle Crater on January 25, 2004, bouncing across the plains inside a cluster of giant airbags. Designed for a 90-sol (92-Earth-day) mission, seasonal Martian winds repeatedly blew the dust off its solar panels, allowing the golf-cart-sized geologist to explore Mars for 5,111 sols (nearly 15 years) and set an off-world driving record of 45.16 kilometers!',
+                science: 'Opportunity hit a scientific jackpot right where it landed: it discovered tiny grey spheres of hematite nicknamed "blueberries" and veins of gypsum that proved ancient Mars wasn’t just dry and freezing—it once had warm, liquid water capable of supporting microbial life.',
+                condition: 'In June 2018, the most intense global dust storm ever recorded on Mars blotted out the Sun over Perseverance Valley, dropping Opportunity’s solar power to near zero. Without battery power to run its internal survival heaters, its electronics succumbed to the -65°C Martian winter.',
+                quiz: {
+                    q: 'What nickname did scientists give the tiny water-formed mineral spheres Opportunity discovered on Mars?',
+                    options: [
+                        'Martian Marbles',
+                        'Blueberries (hematite spherules)',
+                        'Red Rubies'
+                    ],
+                    answer: 1
+                }
+            },
+            'sojourner': {
+                planet: 'mars',
+                title: 'Sojourner Microrover & Pathfinder Lander',
+                site: 'Ares Vallis',
+                coords: '19.13° N, 33.22° W',
+                year: 'July 4, 1997',
+                mass: '11.5 kg (Rover) / 264 kg (Lander)',
+                modelType: 'rover',
+                story: 'Named after civil rights hero Sojourner Truth following a student essay contest, this 65-cm-long six-wheeled robot was the very first rover ever to drive on Mars! Touching down on July 4, 1997, it rolled down a ramp off the Pathfinder lander and spent 83 sols creeping up to Martian rocks like "Barnacle Bill" and "Yogi" at a top speed of just 1 centimeter per second.',
+                science: 'Using its Alpha Proton X-Ray Spectrometer (APXS), Sojourner analyzed the chemical makeup of rocks in an ancient flood plain, discovering silica-rich volcanic rocks and rounded pebbles that pointed to catastrophic ancient floods on Mars.',
+                condition: 'In September 1997, the Pathfinder base station’s rechargeable battery failed after repeated freezing Martian nights, cutting off Sojourner’s radio link to Earth. Sojourner’s onboard contingency code instructed it to drive back to the lander and circle it while waiting for a signal that never came.',
+                quiz: {
+                    q: 'How big was the historic Sojourner Mars rover?',
+                    options: [
+                        'About the size of a microwave oven (65 cm long)',
+                        'As big as a school bus',
+                        'The size of a monster truck'
+                    ],
+                    answer: 0
+                }
+            },
+            'insight': {
+                planet: 'mars',
+                title: 'InSight Mars Geophysical Lander',
+                site: 'Elysium Planitia',
+                coords: '4.5024° N, 135.6234° E',
+                year: '2018 – 2022',
+                mass: '358 kg',
+                modelType: 'insight',
+                story: 'While rovers study the surface of Mars, InSight (Interior Exploration using Seismic Investigations, Geodesy and Heat Transport) was built to peer thousands of kilometers deep inside the planet! Spreading out two round, fan-like solar panels, it used a 2.4-meter robotic arm to place a ultra-sensitive seismometer directly onto the Martian dirt and covered it with a wind and thermal shield.',
+                science: 'Over four years, InSight felt more than 1,300 "marsquakes" and meteoroid strikes! By measuring how seismic waves echoed through the planet, scientists proved Mars has a large liquid metal core (about 1,830 km in radius) and a crust much thicker than Earth’s.',
+                condition: 'Unlike Opportunity, Elysium Planitia rarely got strong dust-devil winds to clean InSight’s circular solar arrays. By December 2022, a thick layer of rusty dust choked out sunlight, and InSight powered down peacefully in "dead bus" mode.',
+                quiz: {
+                    q: 'What primary discovery did InSight make using its dome-covered seismometer?',
+                    options: [
+                        'It detected over 1,300 marsquakes and mapped Mars’s liquid metal core',
+                        'It drilled 100 kilometers down to find underground lakes',
+                        'It launched rockets back to Earth'
+                    ],
+                    answer: 0
+                }
+            }
+        };
+
+        // Parse URL parameter (?id=apollo-11)
+        const params = new URLSearchParams(window.location.search);
+        const currentId = params.get('id') || 'apollo-11';
+        const item = catalog[currentId] || catalog['apollo-11'];
+
+        // Build Quick Switcher Bar
+        const switcher = document.getElementById('artifactSwitcher');
+        Object.keys(catalog).forEach(key => {
+            const a = document.createElement('a');
+            a.href = `equipment.html?id=${key}`;
+            a.className = `nav-artifact-pill ${key === currentId ? 'active' : ''}`;
+            a.innerText = `${catalog[key].planet === 'moon' ? '🌕' : '🔴'} ${catalog[key].title.split('(')[0].trim()}`;
+            switcher.appendChild(a);
+        });
+
+        // Populate Page Text
+        document.getElementById('backToOrbitLink').href = `index.html?planet=${item.planet}`;
+        const badge = document.getElementById('pPlanetBadge');
+        badge.innerText = item.planet === 'moon' ? '🌕 LUNAR ARTIFACT TELEMETRY' : '🔴 MARTIAN ARTIFACT TELEMETRY';
+        badge.className = item.planet === 'moon' ? 'badge bg-info text-dark mb-2 orbitron' : 'badge bg-danger text-white mb-2 orbitron';
+
+        document.getElementById('pTitle').innerText = item.title;
+        document.getElementById('pSite').innerText = item.site;
+        document.getElementById('pCoords').innerText = item.coords;
+        document.getElementById('pYear').innerText = item.year;
+        document.getElementById('pMass').innerText = item.mass;
+        document.getElementById('pStory').innerText = item.story;
+        document.getElementById('pScience').innerText = item.science;
+        document.getElementById('pCondition').innerText = item.condition;
+
+        // Populate Interactive Quiz
+        document.getElementById('qQuestion').innerText = item.quiz.q;
+        const qOptions = document.getElementById('qOptions');
+        const qFeedback = document.getElementById('qFeedback');
+        item.quiz.options.forEach((optText, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'quiz-btn';
+            btn.innerText = optText;
+            btn.onclick = () => {
+                Array.from(qOptions.children).forEach(b => b.classList.remove('correct', 'wrong'));
+                if (idx === item.quiz.answer) {
+                    btn.classList.add('correct');
+                    qFeedback.innerHTML = '<span class="text-success">✅ Correct! Great job, Space Explorer!</span>';
+                } else {
+                    btn.classList.add('wrong');
+                    qFeedback.innerHTML = '<span class="text-danger">❌ Not quite! Try another option above.</span>';
+                }
+            };
+            qOptions.appendChild(btn);
+        });
+
+        // ==========================================
+        // BUILD INTERACTIVE 3D HARDWARE HOLOGRAM
+        // ==========================================
+        const holoBox = document.getElementById('holoCanvasContainer');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(50, holoBox.clientWidth / holoBox.clientHeight, 0.1, 100);
+        camera.position.set(0, 2.2, 5.2);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(holoBox.clientWidth, holoBox.clientHeight);
+        holoBox.appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+
+        scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+        const dirLight = new THREE.DirectionalLight(0x00ffcc, 1.8);
+        dirLight.position.set(5, 8, 5);
+        scene.add(dirLight);
+
+        // Holographic Base Grid
+        const grid = new THREE.GridHelper(6, 16, 0x00d4ff, 0x113355);
+        grid.position.y = -1.1;
+        scene.add(grid);
+
+        const modelGroup = new THREE.Group();
+        scene.add(modelGroup);
+
+        const goldMat = new THREE.MeshStandardMaterial({ color: 0xffb700, metalness: 0.8, roughness: 0.25 });
+        const silverMat = new THREE.MeshStandardMaterial({ color: 0xd0d8e8, metalness: 0.7, roughness: 0.3 });
+        const darkMat = new THREE.MeshStandardMaterial({ color: 0x222834, metalness: 0.5, roughness: 0.6 });
+        const solarMat = new THREE.MeshStandardMaterial({ color: 0x0b48a8, metalness: 0.6, roughness: 0.2 });
+
+        if (item.modelType === 'lander') {
+            // Apollo 11 Octagonal Descent Stage + 4 Landing Legs
+            const body = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.1, 0.85, 8), goldMat);
+            modelGroup.add(body);
+            const bell = new THREE.Mesh(new THREE.ConeGeometry(0.45, 0.7, 24, 1, true), darkMat);
+            bell.position.y = -0.55;
+            modelGroup.add(bell);
+            for (let i = 0; i < 4; i++) {
+                const angle = (i * Math.PI) / 2 + Math.PI / 4;
+                const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.6), silverMat);
+                leg.position.set(Math.cos(angle) * 1.35, -0.35, Math.sin(angle) * 1.35);
+                leg.rotation.z = Math.cos(angle) * 0.45;
+                leg.rotation.x = -Math.sin(angle) * 0.45;
+                modelGroup.add(leg);
+                const pad = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.06, 16), goldMat);
+                pad.position.set(Math.cos(angle) * 1.7, -1.0, Math.sin(angle) * 1.7);
+                modelGroup.add(pad);
+            }
+        } else if (item.modelType === 'rover') {
+            // Rover Chassis + Wheels + Mast Camera
+            const chassis = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.4, 1.2), goldMat);
+            modelGroup.add(chassis);
+            const panel = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.06, 1.4), solarMat);
+            panel.position.y = 0.24;
+            modelGroup.add(panel);
+            const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.1), silverMat);
+            mast.position.set(0.65, 0.75, 0);
+            modelGroup.add(mast);
+            const camHead = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.22, 0.4), silverMat);
+            camHead.position.set(0.65, 1.3, 0);
+            modelGroup.add(camHead);
+            [-0.75, 0, 0.75].forEach(xPos => {
+                [-0.75, 0.75].forEach(zPos => {
+                    const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 0.22, 20), darkMat);
+                    wheel.rotation.x = Math.PI / 2;
+                    wheel.position.set(xPos, -0.55, zPos);
+                    modelGroup.add(wheel);
+                });
+            });
+        } else if (item.modelType === 'helicopter') {
+            // Ingenuity Coaxial Rotors + Tissue Box Fuselage + 4 Carbon Legs
+            const box = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.55, 0.65), goldMat);
+            modelGroup.add(box);
+            const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.1), darkMat);
+            mast.position.y = 0.55;
+            modelGroup.add(mast);
+            const rotor1 = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.03, 0.22), darkMat);
+            rotor1.position.y = 0.75;
+            rotor1.name = 'rotor1';
+            modelGroup.add(rotor1);
+            const rotor2 = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.03, 0.22), silverMat);
+            rotor2.position.y = 0.95;
+            rotor2.rotation.y = Math.PI / 2;
+            rotor2.name = 'rotor2';
+            modelGroup.add(rotor2);
+            const topSolar = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.04, 0.35), solarMat);
+            topSolar.position.y = 1.12;
+            modelGroup.add(topSolar);
+            for (let i = 0; i < 4; i++) {
+                const a = (i * Math.PI) / 2 + Math.PI / 4;
+                const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.4), darkMat);
+                leg.position.set(Math.cos(a) * 0.65, -0.45, Math.sin(a) * 0.65);
+                leg.rotation.z = Math.cos(a) * 0.5;
+                leg.rotation.x = -Math.sin(a) * 0.5;
+                modelGroup.add(leg);
+            }
+        } else {
+            // InSight / Surveyor / Ranger Tripod + Solar Wings / High-Gain Dish
+            const core = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.85, 0.6, 12), silverMat);
+            modelGroup.add(core);
+            const wingL = new THREE.Mesh(new THREE.CylinderGeometry(0.95, 0.95, 0.05, 24), solarMat);
+            wingL.position.set(-1.75, 0.1, 0);
+            modelGroup.add(wingL);
+            const wingR = new THREE.Mesh(new THREE.CylinderGeometry(0.95, 0.95, 0.05, 24), solarMat);
+            wingR.position.set(1.75, 0.1, 0);
+            modelGroup.add(wingR);
+            const dome = new THREE.Mesh(new THREE.SphereGeometry(0.32, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), goldMat);
+            dome.position.set(0, -1.05, 1.25);
+            modelGroup.add(dome);
+        }
+
+        function animateHolo() {
+            requestAnimationFrame(animateHolo);
+            modelGroup.rotation.y += 0.008;
+            const r1 = modelGroup.getObjectByName('rotor1');
+            const r2 = modelGroup.getObjectByName('rotor2');
+            if (r1 && r2) {
+                r1.rotation.y += 0.12;
+                r2.rotation.y -= 0.12;
+            }
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animateHolo();
+    </script>
+</body>
+</html>
