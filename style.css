@@ -188,9 +188,8 @@ canvas {
     margin-top: 2px;
 }
 
-.team-members .divider {
-    color: #00d4ff;
-    margin: 0 6px;
+.team-members span {
+    display: block;
 }
 
 /* Sci-Fi Buttons */

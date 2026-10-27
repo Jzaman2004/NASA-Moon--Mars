@@ -91,6 +91,22 @@
             color: #02040a;
             font-weight: 700;
         }
+        .source-box {
+            display: block;
+            padding: 12px 16px;
+            border: 1px solid rgba(0, 212, 255, 0.35);
+            border-left: 3px solid #00d4ff;
+            border-radius: 8px;
+            background: rgba(0, 212, 255, 0.07);
+            color: #e6f1ff;
+            text-decoration: none;
+            transition: 0.2s ease;
+        }
+        .source-box:hover {
+            background: rgba(0, 212, 255, 0.2);
+            border-color: #00d4ff;
+            transform: translateX(3px);
+        }
     </style>
 </head>
 <body>
@@ -152,8 +168,12 @@
 
                     <div class="mt-3 p-3 rounded" style="background: rgba(0,255,204,0.07); border: 1px solid rgba(0,255,204,0.3);">
                         <div class="orbitron text-info small fw-bold">⛏️ ARCHIVED BY TEAM SPACE MINERS</div>
-                        <div class="small text-light mt-1">Researchers: <strong>Jawad Zaman</strong> &amp; <strong>Sofia Calidayan</strong></div>
+                        <div class="small text-light mt-1">Researchers: <strong>Jawad Zaman</strong>, <strong>Sofia Calidayan</strong> &amp; <strong>Shahreen Zaman</strong></div>
                     </div>
+                    <a id="pSource" class="source-box mt-3" href="#" target="_blank" rel="noopener noreferrer">
+                        <span class="orbitron text-info small fw-bold">🔗 OFFICIAL NASA SOURCE</span>
+                        <span class="small text-light d-block mt-1">Open artifact information on NASA.gov &#8599;</span>
+                    </a>
                 </div>
             </div>
 
@@ -189,6 +209,7 @@
             'apollo-11': {
                 planet: 'moon',
                 title: 'Apollo 11 Lunar Module Descent Stage ("Eagle")',
+                source: 'https://www.nasa.gov/mission/apollo-11/',
                 site: 'Sea of Tranquility',
                 coords: '0.6741° N, 23.4730° E',
                 year: 'July 20, 1969',
@@ -210,6 +231,7 @@
             'apollo-15-lrv': {
                 planet: 'moon',
                 title: 'Apollo 15 Lunar Roving Vehicle ("Moon Buggy")',
+                source: 'https://nssdc.gsfc.nasa.gov/planetary/lunar/apollo_lrv.html',
                 site: 'Hadley–Apennine',
                 coords: '26.1322° N, 3.6339° E',
                 year: 'July 31, 1971',
@@ -231,6 +253,7 @@
             'surveyor-3': {
                 planet: 'moon',
                 title: 'Surveyor 3 Robotic Lander',
+                source: 'https://science.nasa.gov/mission/surveyor-3/',
                 site: 'Ocean of Storms',
                 coords: '3.0158° S, 23.4183° W',
                 year: 'April 20, 1967',
@@ -252,6 +275,7 @@
             'ranger-4': {
                 planet: 'moon',
                 title: 'Ranger 4 Lunar Impact Probe',
+                source: 'https://science.nasa.gov/mission/ranger-4/',
                 site: 'Lunar Far Side',
                 coords: '15.5° S, 130.7° W',
                 year: 'April 26, 1962',
@@ -273,6 +297,7 @@
             'ingenuity': {
                 planet: 'mars',
                 title: 'Ingenuity Mars Helicopter ("Ginny")',
+                source: 'https://science.nasa.gov/mission/mars-2020-perseverance/ingenuity-mars-helicopter/',
                 site: 'Jezero Crater ("Valinor Hills")',
                 coords: '18.4447° N, 77.4508° E',
                 year: 'Feb 2021 – Jan 2024',
@@ -294,6 +319,7 @@
             'opportunity': {
                 planet: 'mars',
                 title: 'Opportunity Mars Exploration Rover (MER-B)',
+                source: 'https://science.nasa.gov/mission/mer-opportunity/',
                 site: 'Perseverance Valley, Endeavour Crater',
                 coords: '2.046° S, 5.528° W',
                 year: '2004 – 2018',
@@ -315,6 +341,7 @@
             'sojourner': {
                 planet: 'mars',
                 title: 'Sojourner Microrover & Pathfinder Lander',
+                source: 'https://science.nasa.gov/mission/mars-pathfinder/',
                 site: 'Ares Vallis',
                 coords: '19.13° N, 33.22° W',
                 year: 'July 4, 1997',
@@ -336,6 +363,7 @@
             'insight': {
                 planet: 'mars',
                 title: 'InSight Mars Geophysical Lander',
+                source: 'https://science.nasa.gov/mission/insight/',
                 site: 'Elysium Planitia',
                 coords: '4.5024° N, 135.6234° E',
                 year: '2018 – 2022',
@@ -385,6 +413,8 @@
         document.getElementById('pStory').innerText = item.story;
         document.getElementById('pScience').innerText = item.science;
         document.getElementById('pCondition').innerText = item.condition;
+        const sourceLink = document.getElementById('pSource');
+        sourceLink.href = item.source;
 
         // Populate Interactive Quiz
         document.getElementById('qQuestion').innerText = item.quiz.q;
